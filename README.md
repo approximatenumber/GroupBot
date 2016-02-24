@@ -1,2 +1,2 @@
-# group_bot
-Bot for participating in Telegram groups  
+# [AMD POWER] bot
+Bot for participating in "AMD POWER" Telegram group
