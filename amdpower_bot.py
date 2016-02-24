@@ -38,7 +38,7 @@ def main():
                 msg = "i`m talking in group now"
                 sendMessage(chat_id, msg)
             elif left_chat_participant:
-                msg = "%s нас покинул. Какая жалость..." % left_chat_participant["first_name"]
+                msg = "%s нас покинул(а). Какая жалость..." % left_chat_participant["first_name"]
                 sendMessage(chat_id, msg)
             elif new_chat_participant:
                 msg = "Добро пожаловать, %s!" % new_chat_participant["first_name"]
