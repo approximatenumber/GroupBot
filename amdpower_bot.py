@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # importing modules
-import telegram, configparser, logging, os, sys, re
+import telegram, configparser, logging, os, sys, re, random
 from time import sleep, localtime
 try:
     from urllib import urlopen
@@ -21,7 +21,9 @@ except ImportError:
 # variables
 log_file = "bot.log"
 amd_group = -132848042
-
+welcome_text = ['Рады приветствовать на старейшем канале, посвященном AMD и всему остальному не менее важному',
+            'AMD loves you (and me)']
+yesno_text = ['Да', 'Нет']
 def main():
     logging.basicConfig(level = logging.WARNING,filename=log_file,format='%(asctime)s:%(levelname)s - %(message)s')
 
@@ -34,18 +36,19 @@ def main():
             message = update.message.text
             new_chat_participant = update.message.new_chat_participant
             left_chat_participant = update.message.left_chat_participant
-            if message and chat_id == amd_group:
-                msg = "i`m talking in group now"
-                sendMessage(chat_id, msg)
-            elif left_chat_participant:
-                msg = "%s нас покинул(а). Какая жалость..." % left_chat_participant["first_name"]
-                sendMessage(chat_id, msg)
-            elif new_chat_participant:
-                msg = "Добро пожаловать, %s!" % new_chat_participant["first_name"]
-                sendMessage(chat_id, msg)
-            elif message:
-                msg = "Я бот, такие дела."
-                sendMessage(chat_id, msg)
+            if chat_id == amd_group:
+                if new_chat_participant:
+                    msg = new_chat_participant["first_name"] + '! ' + random.choice(welcome_text)
+                    sendMessage(chat_id, msg)
+                elif left_chat_participant:
+                    msg = "%s нас покинул(а). Какая жалость..." % left_chat_participant["first_name"]
+                    sendMessage(chat_id, msg)
+                elif message == "@amdpower_bot /random":
+                    msg = random.choice(yesno_text)
+                    sendMessage(chat_id, msg)
+                elif message:
+                    msg = message
+                    sendMessage(chat_id, msg) 
         return update_id
 
 # initialization
