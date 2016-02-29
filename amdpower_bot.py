@@ -13,41 +13,36 @@ try:
 except ImportError:
     from urllib2 import URLError                                # python 2 (raspbian)
 try:
-    sys.path.append('.private'); from config import TOKEN       # importing secret TOKEN
+    sys.path.append('.private'); from config import TOKEN, GROUP, BOTNAME       # importing private data
 except ImportError:
-    print("need TOKEN from .private/config.py")
+    print("need TOKEN and GROUP from .private/config.py!")
     sys.exit(1)
 
 # variables
 log_file = "bot.log"
-amd_group = -132848042
 welcome_text = ['Рады приветствовать на старейшем канале, посвященном AMD и всему остальному не менее важному',
             'AMD loves you (and me)']
-yesno_text = ['Да', 'Нет']
-def main():
+yesno_text = ['Да', 'Нет', 'Вероятно']
+
+def main(**args):
+    
     logging.basicConfig(level = logging.WARNING,filename=log_file,format='%(asctime)s:%(levelname)s - %(message)s')
 
-    sendMessage = lambda chat_id, msg: bot.sendMessage(chat_id, msg)
-
+    sendMessage = lambda chat_id, msg: bot.sendMessage(chat_id, msg, parse_mode="Markdown")
+    
     def echo(bot, update_id):                                                       # Request updates after the last update_id
         for update in bot.getUpdates(offset=update_id, timeout=10):                 # chat_id is required to reply to any message
             chat_id = update.message.chat_id
             update_id = update.update_id + 1
             message = update.message.text
             new_chat_participant = update.message.new_chat_participant
-            left_chat_participant = update.message.left_chat_participant
-            if chat_id == amd_group:
+            if chat_id == GROUP:
                 if new_chat_participant:
-                    msg = new_chat_participant["first_name"] + '! ' + random.choice(welcome_text)
+                    msg = "*%s*! %s" % (new_chat_participant.first_name, random.choice(welcome_text))
                     sendMessage(chat_id, msg)
-                elif left_chat_participant:
-                    msg = "%s нас покинул(а). Какая жалость..." % left_chat_participant["first_name"]
-                    sendMessage(chat_id, msg)
-                elif message == "@amdpower_bot /random":
-                    msg = random.choice(yesno_text)
-                    sendMessage(chat_id, msg)
-                elif message:
-                    msg = message
+                # if bot is asked, he sends random answer
+                elif BOTNAME and "?" in message:
+                    msg = "*" + random.choice(yesno_text) + "*"
                     sendMessage(chat_id, msg) 
         return update_id
 
