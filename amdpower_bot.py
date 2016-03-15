@@ -47,11 +47,12 @@ def echo(bot, update_id):
                 elif (BOTNAME and "?") in message:
                     msg = "* %s *" % random.choice(yesno_text)
                     sendMessage(chat_id, msg)
-                elif "/counter" in message:
+                elif (BOTNAME and "/counter") in message:
                     msg = "*Сообщений, что я посчитал: %d*" % msg_counter
                     sendMessage(chat_id, msg)
-                elif left_chat_participant.first_name == BOTFIRSTNAME:
-                    msg_counter = 0
+                elif left_chat_participant.first_name:
+                    if left_chat_participant.first_name == BOTFIRSTNAME:
+                        msg_counter = 0
                 elif message:
                     msg = "*Не понимаю, о чем ты сейчас.*"
                     sendMessage(chat_id, msg)
