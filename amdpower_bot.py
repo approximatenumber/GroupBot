@@ -4,18 +4,13 @@
 # importing modules
 import telegram, configparser, logging, os, sys, re, random
 from time import sleep, localtime
+from urllib.request import urlopen
+from urllib.error import URLError
+
 try:
-    from urllib import urlopen
+    sys.path.append('.private'); from config import TOKEN, GROUP, BOTNAME, BOTFIRSTNAME       # importing private data
 except ImportError:
-    from urllib.request import urlopen                          # python 2 (raspbian)
-try:
-    from urllib.error import URLError
-except ImportError:
-    from urllib2 import URLError                                # python 2 (raspbian)
-try:
-    sys.path.append('.private'); from config import TOKEN, GROUP, BOTNAME       # importing private data
-except ImportError:
-    print("need TOKEN and GROUP from .private/config.py!")
+    print("I need TOKEN, GROUP, BOTNAME, BOTFIRSTNAME from .private/config.py!")
     sys.exit(1)
 
 # variables
@@ -23,34 +18,62 @@ log_file = "bot.log"
 welcome_text = ['Рады приветствовать на старейшем канале, посвященном AMD и всему остальному не менее важному',
             'AMD loves you (and me)']
 yesno_text = ['Да', 'Нет', 'Вероятно']
+help_text = 'Привет, я *amdpower_bot*. \n' \
+            '1. Я буду здороваться со всеми пришедшими. \n' \
+            '2. Я могу утвердительно отвечать на ваши вопросы, для этого просто задайте мне вопрос. \n' \
+            '3. Я считаю сообщения в этом чатике. Чтобы узнать, сколько их, напиши мне /counter.'
 
-def main(**args):
-    
-    logging.basicConfig(level = logging.WARNING,filename=log_file,format='%(asctime)s:%(levelname)s - %(message)s')
+global msg_counter
+msg_counter = 0
 
-    sendMessage = lambda chat_id, msg: bot.sendMessage(chat_id, msg, parse_mode="Markdown")
-    
-    def echo(bot, update_id):                                                       # Request updates after the last update_id
-        for update in bot.getUpdates(offset=update_id, timeout=10):                 # chat_id is required to reply to any message
+def echo(bot, update_id):
+        global msg_counter
+        for update in bot.getUpdates(offset=update_id, timeout=10):
             chat_id = update.message.chat_id
             update_id = update.update_id + 1
             message = update.message.text
             new_chat_participant = update.message.new_chat_participant
+            left_chat_participant = update.message.left_chat_participant
             if chat_id == GROUP:
+                msg_counter += 1
                 if new_chat_participant:
-                    msg = "*%s*! %s" % (new_chat_participant.first_name, random.choice(welcome_text))
+                    if new_chat_participant.first_name != BOTFIRSTNAME:
+                        msg = "%s, *%s*!" % ( random.choice(welcome_text), new_chat_participant.first_name)
+                        sendMessage(chat_id, msg)
+                    elif new_chat_participant.first_name == BOTFIRSTNAME:
+                        msg = help_text
+                        sendMessage(chat_id, msg)
+                # if bot is asked, it sends random answer from yesno_text
+                elif (BOTNAME and "?") in message:
+                    msg = "* %s *" % random.choice(yesno_text)
                     sendMessage(chat_id, msg)
-                # if bot is asked, he sends random answer
-                elif BOTNAME and "?" in message:
-                    msg = "*" + random.choice(yesno_text) + "*"
-                    sendMessage(chat_id, msg) 
+                elif "/counter" in message:
+                    msg = "*Сообщений, что я посчитал: %d*" % msg_counter
+                    sendMessage(chat_id, msg)
+                elif left_chat_participant.first_name == BOTFIRSTNAME:
+                    msg_counter = 0
+                else:
+                    msg = "*Не понимаю, о чем ты сейчас.*"
+                    sendMessage(chat_id, msg)
+            else:
+                msg = "Я *amdpower_bot*, и я отвечаю только в чате *[AMD POWER]*."
+                sendMessage(chat_id, msg)
+
         return update_id
+
+logging.basicConfig(level = logging.WARNING,filename=log_file,format='%(asctime)s:%(levelname)s - %(message)s')
+
+def sendMessage(chat_id, msg):
+    bot.sendMessage(chat_id, msg, parse_mode="Markdown")
+
+bot = telegram.Bot(TOKEN)
+
+def main(**args):
 
 # initialization
     open(log_file, 'w').close()
     logging.warning('bot started...')
 
-    bot = telegram.Bot(TOKEN)
     try:
         update_id = bot.getUpdates()[0].update_id
     except IndexError:
