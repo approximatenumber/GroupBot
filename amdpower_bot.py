@@ -52,7 +52,7 @@ def echo(bot, update_id):
                     sendMessage(chat_id, msg)
                 elif left_chat_participant.first_name == BOTFIRSTNAME:
                     msg_counter = 0
-                else:
+                elif message:
                     msg = "*Не понимаю, о чем ты сейчас.*"
                     sendMessage(chat_id, msg)
             else:
