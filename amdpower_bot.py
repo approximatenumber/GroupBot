@@ -28,6 +28,7 @@ global msg_counter
 msg_counter = 0
 
 def echo(bot, update_id):
+    try:
         global msg_counter
         for update in bot.getUpdates(offset=update_id, timeout=10):
             chat_id = update.message.chat_id
@@ -59,8 +60,9 @@ def echo(bot, update_id):
             else:
                 msg = "Я *amdpower_bot*, и я отвечаю только в чате *[AMD POWER]*."
                 sendMessage(chat_id, msg)
-
-        return update_id
+    except Exception as error:
+        logging.warning('error in echo(): %s' % error)
+    return update_id
 
 logging.basicConfig(level = logging.WARNING,filename=log_file,format='%(asctime)s:%(levelname)s - %(message)s')
 
